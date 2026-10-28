@@ -1,0 +1,34 @@
+name: Clean up Forgejo container tags
+description: Remove obsolete tags without deleting digest-only architecture manifests.
+inputs:
+  image:
+    description: Fully qualified Forgejo image name, including registry, owner, and package.
+    required: true
+  token:
+    description: Forgejo token with package read/write access.
+    required: true
+  keep-tag:
+    description: Current content or upstream tag to retain; latest is always retained.
+    required: true
+  retention-days:
+    description: Positive age in days, or none when content-tags-only is true.
+    required: true
+  content-tags-only:
+    description: Restrict deletion to seven-character lowercase hexadecimal content tags.
+    default: 'false'
+runs:
+  using: composite
+  steps:
+    - name: Clean up container tags
+      shell: python3 {0}
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+        IMAGE_NAME: ${{ inputs.image }}
+        FORGEJO_TOKEN: ${{ inputs.token }}
+        KEEP_TAG: ${{ inputs.keep-tag }}
+        GC_RETENTION_DAYS: ${{ inputs.retention-days }}
+        GC_CONTENT_TAGS_ONLY: ${{ inputs.content-tags-only }}
+      run: |
+        import os
+        import runpy
+        runpy.run_path(os.path.join(os.environ["ACTION_PATH"], "registry_gc.py"), run_name="__main__")

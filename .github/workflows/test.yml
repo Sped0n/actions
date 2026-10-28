@@ -1,0 +1,44 @@
+name: Test
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Nix
+        uses: cachix/install-nix-action@75c75c31ebece974e48ebc36b4ad125bd97bd97b # 31.11.3
+        with:
+          enable_kvm: true
+          extra_nix_config: |
+            keep-env-derivations = true
+            keep-outputs = true
+
+      - name: Restore Nix store
+        id: nix-cache-restore
+        uses: nix-community/cache-nix-action/restore@7df957e333c1e5da7721f60227dbba6d06080569 # v7
+        with:
+          primary-key: nix-store-ci-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('flake.nix', 'flake.lock') }}
+          restore-prefixes-first-match: nix-store-ci-${{ runner.os }}-${{ runner.arch }}-
+
+      - name: Run prek checks
+        run: nix develop -c prek run --all-files
+
+      - name: Run Python tests
+        run: nix develop -c python3 -W error::ResourceWarning .github/actions/run_tests.py
+
+      - name: Save Nix store
+        if: ${{ always() && steps.nix-cache-restore.outputs.primary-key != '' && steps.nix-cache-restore.outputs.hit-primary-key != 'true' }}
+        uses: nix-community/cache-nix-action/save@7df957e333c1e5da7721f60227dbba6d06080569 # v7
+        with:
+          primary-key: ${{ steps.nix-cache-restore.outputs.primary-key }}
+          gc-max-store-size: 500M

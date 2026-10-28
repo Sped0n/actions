@@ -1,0 +1,32 @@
+repos:
+  - repo: local
+    hooks:
+      - id: nix-format
+        name: Format Nix
+        entry: nixfmt
+        language: system
+        files: '\.nix$'
+
+      - id: python-fix
+        name: Fix Python
+        entry: ruff check --fix --force-exclude --no-cache
+        language: system
+        files: '\.py$'
+
+      - id: python-organize-imports
+        name: Organize Python imports
+        entry: ruff check --fix --force-exclude --select=I001 --no-cache
+        language: system
+        files: '\.py$'
+
+      - id: python-format
+        name: Format Python
+        entry: ruff format --force-exclude
+        language: system
+        files: '\.py$'
+
+      - id: workflow-lint
+        name: Lint GitHub workflows
+        entry: actionlint
+        language: system
+        files: '^\.github/workflows/[^/]+\.ya?ml$'

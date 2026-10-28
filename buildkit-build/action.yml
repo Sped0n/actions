@@ -1,0 +1,90 @@
+name: BuildKit build
+description: Build and export images with an in-job rootless BuildKit daemon
+inputs:
+  context:
+    description: Local build context
+    default: '.'
+  file:
+    description: Dockerfile path; defaults to Dockerfile inside the context
+  platforms:
+    description: Comma-separated target platforms; defaults to the native platform
+  outputs:
+    description: Newline-separated BuildKit output specifications
+    required: true
+  build-args:
+    description: Newline-separated NAME=value build arguments
+  labels:
+    description: Newline-separated NAME=value image labels
+  cache-from:
+    description: Newline-separated BuildKit cache import specifications
+  cache-to:
+    description: Newline-separated BuildKit cache export specifications
+  cache-binary:
+    description: Cache verified upstream release archives
+    default: 'true'
+  no-process-sandbox:
+    description: Allow Dockerfile RUN processes to share the BuildKit daemon's PID namespace
+    default: 'false'
+outputs:
+  digest:
+    description: Exported image digest, when provided by the exporter
+    value: ${{ steps.build.outputs.digest }}
+  metadata:
+    description: BuildKit exporter metadata as JSON
+    value: ${{ steps.build.outputs.metadata }}
+runs:
+  using: composite
+  steps:
+    - name: Prepare BuildKit
+      id: prepare
+      shell: python3 {0}
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+        INPUT_CACHE_BINARY: ${{ inputs.cache-binary }}
+        INPUT_NO_PROCESS_SANDBOX: ${{ inputs.no-process-sandbox }}
+      run: |
+        import os
+        import subprocess
+        from pathlib import Path
+        subprocess.run(
+            ['python3', str(Path(os.environ['ACTION_PATH']) / 'buildkit_build.py'), 'prepare'],
+            check=True,
+        )
+
+    - name: Restore BuildKit archives
+      id: cache
+      if: inputs.cache-binary == 'true'
+      continue-on-error: true
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ${{ steps.prepare.outputs.cache-path }}
+        key: ${{ steps.prepare.outputs.cache-key }}
+
+    - name: Build with rootless BuildKit
+      id: build
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      env:
+        BUILD_SCRIPT: ${{ steps.prepare.outputs.script }}
+        BUILD_CACHE: ${{ steps.prepare.outputs.cache-path }}
+        INPUT_CONTEXT: ${{ inputs.context }}
+        INPUT_FILE: ${{ inputs.file }}
+        INPUT_PLATFORMS: ${{ inputs.platforms }}
+        INPUT_OUTPUTS: ${{ inputs.outputs }}
+        INPUT_BUILD_ARGS: ${{ inputs.build-args }}
+        INPUT_LABELS: ${{ inputs.labels }}
+        INPUT_CACHE_FROM: ${{ inputs.cache-from }}
+        INPUT_CACHE_TO: ${{ inputs.cache-to }}
+        INPUT_NO_PROCESS_SANDBOX: ${{ inputs.no-process-sandbox }}
+      with:
+        script: |
+          // A JavaScript action receives the runtime cache credentials; child Python inherits them.
+          if (process.env.ACTIONS_RUNTIME_TOKEN) core.setSecret(process.env.ACTIONS_RUNTIME_TOKEN);
+          await exec.exec('python3', [process.env.BUILD_SCRIPT, 'build', process.env.BUILD_CACHE]);
+
+    - name: Save BuildKit archives
+      if: inputs.cache-binary == 'true' && steps.cache.outputs.cache-hit != 'true'
+      continue-on-error: true
+      uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ${{ steps.prepare.outputs.cache-path }}
+        key: ${{ steps.prepare.outputs.cache-key }}
