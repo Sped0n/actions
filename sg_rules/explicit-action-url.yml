@@ -1,0 +1,30 @@
+id: explicit-action-url
+language: yaml
+severity: error
+message: Use an explicit HTTPS action URL, such as https://github.com/owner/repo@SHA.
+files:
+  - '**/action.yml'
+  - '**/action.yaml'
+rule:
+  any:
+    - kind: block_mapping_pair
+    - kind: flow_pair
+  has:
+    field: key
+    regex: ^['"]?uses['"]?$
+  not:
+    has:
+      field: value
+      regex: ^['"]?https://[^/\s]+/
+  inside:
+    any:
+      - kind: block_mapping
+      - kind: flow_mapping
+    inside:
+      any:
+        - kind: block_node
+        - kind: flow_node
+      inside:
+        any:
+          - kind: block_sequence_item
+          - kind: flow_sequence

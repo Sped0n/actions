@@ -25,6 +25,13 @@ repos:
         language: system
         files: '\.py$'
 
+      - id: composite-action-urls
+        name: Check explicit composite action URLs
+        entry: ast-grep scan
+        language: system
+        pass_filenames: false
+        files: '(^|/)action\.ya?ml$|^sgconfig\.yml$|^sg_rules/|^\.pre-commit-config\.yaml$'
+
       - id: workflow-lint
         name: Lint GitHub workflows
         entry: actionlint

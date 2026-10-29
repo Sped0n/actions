@@ -1,13 +1,13 @@
 # Actions
 
-GitHub and Forgejo composite actions. Python 3.11+; standard library only. The BuildKit action also requires Node.js 24.
+Forgejo composite actions. Python 3.11+; standard library only. The BuildKit action also requires Node.js 24.
 
-Forgejo references use `https://github.com/Sped0n/actions/<action>@<SHA>`.
+Composite manifests use explicit HTTPS action URLs, which GitHub Actions does not support. Repository CI runs on GitHub.
 
 ## buildkit-build
 
 ```yaml
-- uses: Sped0n/actions/buildkit-build@<SHA>
+- uses: https://github.com/Sped0n/actions/buildkit-build@<SHA>
   with:
     outputs: type=image,name=registry.example.com/owner/app:latest,push=true
     cache-from: type=gha,scope=app-amd64
@@ -33,7 +33,7 @@ Forgejo references use `https://github.com/Sped0n/actions/<action>@<SHA>`.
 ## registry-gc
 
 ```yaml
-- uses: Sped0n/actions/registry-gc@<SHA>
+- uses: https://github.com/Sped0n/actions/registry-gc@<SHA>
   with:
     image: git.example.com/owner/app
     token: ${{ secrets.PAT }}
@@ -50,7 +50,7 @@ Forgejo references use `https://github.com/Sped0n/actions/<action>@<SHA>`.
 
 ## Development
 
-`nix develop`: Python, prek, Ruff, actionlint, and nixfmt.
+`nix develop`: Python, prek, Ruff, actionlint, nixfmt, and ast-grep. Prek checks composite action URLs with ast-grep; `.github/workflows` uses GitHub-native references.
 
 ```text
 prek install

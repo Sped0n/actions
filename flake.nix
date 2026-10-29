@@ -26,6 +26,7 @@
                   ruff
                   actionlint
                   nixfmt
+                  ast-grep
                 ];
               };
             }

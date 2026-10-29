@@ -55,14 +55,14 @@ runs:
       id: cache
       if: inputs.cache-binary == 'true'
       continue-on-error: true
-      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      uses: https://github.com/actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: ${{ steps.prepare.outputs.cache-path }}
         key: ${{ steps.prepare.outputs.cache-key }}
 
     - name: Build with rootless BuildKit
       id: build
-      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      uses: https://github.com/actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       env:
         BUILD_SCRIPT: ${{ steps.prepare.outputs.script }}
         BUILD_CACHE: ${{ steps.prepare.outputs.cache-path }}
@@ -84,7 +84,7 @@ runs:
     - name: Save BuildKit archives
       if: inputs.cache-binary == 'true' && steps.cache.outputs.cache-hit != 'true'
       continue-on-error: true
-      uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      uses: https://github.com/actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: ${{ steps.prepare.outputs.cache-path }}
         key: ${{ steps.prepare.outputs.cache-key }}
