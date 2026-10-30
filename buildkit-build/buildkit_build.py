@@ -239,7 +239,6 @@ def worker(state):
         os.environ["BUILDKIT_HOST"],
         "--containerd-worker=false",
         "--oci-worker=true",
-        "--oci-worker-snapshotter=native",
         "--oci-worker-net=host",
     ]
     if boolean_input("INPUT_NO_PROCESS_SANDBOX", "false"):

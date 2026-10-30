@@ -16,13 +16,14 @@ Nested action references use explicit HTTPS URLs, which GitHub Actions does not 
 
 - Local build contexts; registry authentication uses existing Docker credentials, including `DOCKER_CONFIG`.
 - Outputs and cache specifications are newline-separated. Build arguments and labels use newline-separated `NAME=value` entries; neither is suitable for secrets.
-- Rootless BuildKit uses the native snapshotter and inherits job cgroup limits. No host Docker daemon or socket is used.
+- Rootless BuildKit automatically selects overlayfs, fuse-overlayfs, or native and inherits job cgroup limits. No host Docker daemon or socket is used.
 - Binary caching defaults to enabled. Archive sizes and SHA-256 hashes are verified before extraction, including cache hits. Invalid archives are downloaded again; cache-service failures do not fail the build. Cache entries are immutable and subject to eviction.
 - Image caching is independent of binary caching. BuildKit cache backends pass through; `type=gha` requires compatible runner cache endpoints.
 
 ## Runner requirements
 
 - Linux AMD64/ARM64, `newuidmap`, `newgidmap`, and subordinate UID/GID ranges for the invoking user.
+- For overlayfs in Docker jobs, use a compatible backing filesystem for `RUNNER_TEMP`, such as a job-scoped `--volume /tmp`. Nested overlay storage may force native fallback.
 - User namespaces, mounts, and compatible seccomp/AppArmor policies. Docker's default seccomp profile is insufficient. The action installs no prerequisites or security-policy changes.
 - Process sandboxing requires compatible `/proc` mounts and PID namespace permissions. `no-process-sandbox: 'true'` shares the daemon PID namespace: `RUN` processes can signal the daemon; ptrace restrictions depend on seccomp. Trusted Dockerfiles only; default is `'false'`.
 - Foreign-platform `RUN` instructions require separately configured emulation.
