@@ -4,7 +4,7 @@
 
 ## Publishing
 
-The workflow checks Mondays at 03:00 UTC or manually from the default branch. It skips building and publishing when the upstream multi-architecture digest and Dockerfile are unchanged. Both architectures use the same resolved upstream digest. APT-only updates do not trigger builds.
+The workflow checks on pushes to `main` affecting `runner-image/**` or its workflow file, Mondays at 03:00 UTC, and manually from the default branch. It skips building and publishing when the upstream multi-architecture digest and Dockerfile are unchanged. Both architectures use the same resolved upstream digest. APT-only updates do not trigger builds.
 
 Each publication updates `latest` and adds a tag containing the full multi-architecture image hash, without the `sha256:` prefix. Per-run staging tags are also retained. The job summary reports both references. Set the GHCR package visibility to public after its first publication.
 
