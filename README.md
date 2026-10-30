@@ -6,6 +6,7 @@
 .
 ├── buildkit-build/   # Rootless BuildKit image builds
 ├── registry-gc/      # Forgejo container tag cleanup
+├── runner-image/    # Weekly/manual multi-architecture runner image
 └── sg_rules/         # Composite action URL policy
 ```
 
